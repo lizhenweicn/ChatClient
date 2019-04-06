@@ -31,6 +31,11 @@ public class ChatClient extends Frame {
      */
     private Socket mSocket;
 
+    /**
+     * 网络数据输出流
+     */
+    private DataOutputStream mDos;
+
     public static void main(String[] args) {
         //  显示主界面
         new ChatClient().launchFrame();
@@ -51,6 +56,7 @@ public class ChatClient extends Frame {
         this.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
+                disconnect();
                 System.exit(0);
             }
         });
@@ -69,8 +75,20 @@ public class ChatClient extends Frame {
         try {
             mSocket = new Socket("127.0.0.1", 8888);
             System.out.println("connected");
+            mDos = new DataOutputStream(mSocket.getOutputStream());
         } catch (UnknownHostException e) {
             e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 断开客户端与服务器的连接
+     */
+    private void disconnect() {
+        try {
+            mDos.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -86,10 +104,8 @@ public class ChatClient extends Frame {
             mTaContent.append(inputContent);
             mTfInput.setText("");
             try {
-                DataOutputStream dos = new DataOutputStream(mSocket.getOutputStream());
-                dos.writeUTF(inputContent);
-                dos.flush();
-                dos.close();
+                mDos.writeUTF(inputContent);
+                mDos.flush();
             } catch (IOException e1) {
                 e1.printStackTrace();
             }
