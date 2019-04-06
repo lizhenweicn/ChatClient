@@ -5,9 +5,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.Socket;
-import java.net.UnknownHostException;
 
 /**
  * @author : zhenweiLi
@@ -25,11 +23,6 @@ public class ChatClient extends Frame {
      * 输入文本框
      */
     private TextField mTfInput = new TextField();
-
-    /**
-     * 前后端通讯的 Socket
-     */
-    private Socket mSocket;
 
     /**
      * 网络数据输出流
@@ -73,11 +66,9 @@ public class ChatClient extends Frame {
      */
     private void connect() {
         try {
-            mSocket = new Socket("127.0.0.1", 8888);
+            Socket socket = new Socket("127.0.0.1", 8888);
             System.out.println("connected");
-            mDos = new DataOutputStream(mSocket.getOutputStream());
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
+            mDos = new DataOutputStream(socket.getOutputStream());
         } catch (IOException e) {
             e.printStackTrace();
         }
