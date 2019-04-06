@@ -3,7 +3,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
@@ -23,6 +25,11 @@ public class ChatClient extends Frame {
      * 输入文本框
      */
     private TextField mTfInput = new TextField();
+
+    /**
+     * 前后端通讯的 Socket
+     */
+    private Socket mSocket;
 
     public static void main(String[] args) {
         //  显示主界面
@@ -55,9 +62,12 @@ public class ChatClient extends Frame {
         connect();
     }
 
+    /**
+     * 连接服务器端
+     */
     private void connect() {
         try {
-            Socket socket = new Socket("127.0.0.1", 8888);
+            mSocket = new Socket("127.0.0.1", 8888);
             System.out.println("connected");
         } catch (UnknownHostException e) {
             e.printStackTrace();
@@ -75,6 +85,14 @@ public class ChatClient extends Frame {
             String inputContent = mTfInput.getText().trim();
             mTaContent.append(inputContent);
             mTfInput.setText("");
+            try {
+                DataOutputStream dos = new DataOutputStream(mSocket.getOutputStream());
+                dos.writeUTF(inputContent);
+                dos.flush();
+                dos.close();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
         }
     }
 
