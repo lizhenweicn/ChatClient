@@ -3,9 +3,15 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.Socket;
+import java.net.SocketException;
+
+import static sun.jvm.hotspot.runtime.PerfMemory.start;
 
 /**
  * @author : zhenweiLi
@@ -25,9 +31,29 @@ public class ChatClient extends Frame {
     private TextField mTfInput = new TextField();
 
     /**
+     * 前后端通讯的 Socket
+     */
+    private Socket mSocket;
+
+    /**
+     * 网络数据输出流
+     */
+    private DataInputStream mDis;
+
+    /**
      * 网络数据输出流
      */
     private DataOutputStream mDos;
+
+    /**
+     * 是否已经连接
+     */
+    private boolean mConnected;
+
+    /**
+     * 接收消息的线程
+     */
+    private Thread mReceiveThread = new Thread(new ReceiveThread());
 
     public static void main(String[] args) {
         //  显示主界面
@@ -65,24 +91,53 @@ public class ChatClient extends Frame {
      * 连接服务器端
      */
     private void connect() {
+
         try {
-            Socket socket = new Socket("127.0.0.1", 8888);
+            mSocket = new Socket("127.0.0.1", 8888);
             System.out.println("connected");
-            mDos = new DataOutputStream(socket.getOutputStream());
+            mDis = new DataInputStream(mSocket.getInputStream());
+            mDos = new DataOutputStream(mSocket.getOutputStream());
+            mConnected = true;
+        } catch (ConnectException e) {
+            System.out.println("服务器未启动");
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        mReceiveThread.start();
+
     }
 
     /**
      * 断开客户端与服务器的连接
      */
     private void disconnect() {
+
+        /// 因为线程中有阻塞方法，所以可能出现卡死的现象
+//        try {
+//            mConnected = false;
+//            mReceiveThread.join();
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        } finally {
+//            try {
+//                mDis.close();
+//                mDos.close();
+//                mSocket.close();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
+
         try {
+            mConnected = false;
+            mDis.close();
             mDos.close();
+            mSocket.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
+
     }
 
     /**
@@ -90,17 +145,37 @@ public class ChatClient extends Frame {
      */
     private class OnInputViewEnter implements ActionListener {
         @Override
-        public void actionPerformed(ActionEvent e) {
+        public void actionPerformed(ActionEvent event) {
             String inputContent = mTfInput.getText().trim();
-            mTaContent.append(inputContent);
+            mTaContent.append("自己 ：" + "\t" + inputContent + "\r\n");
             mTfInput.setText("");
             try {
                 mDos.writeUTF(inputContent);
                 mDos.flush();
-            } catch (IOException e1) {
-                e1.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
+    }
+
+    private class ReceiveThread implements Runnable {
+
+        @Override
+        public void run() {
+            try {
+                while (mConnected) {
+                    String readUTF = mDis.readUTF();
+                    mTaContent.append("对方 ：" + "\t" + readUTF + "\r\n");
+                }
+            } catch (EOFException e) {
+                System.out.println("服务器失联了");
+            } catch (SocketException e) {
+                System.out.println("Bye ~");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
     }
 
 }
