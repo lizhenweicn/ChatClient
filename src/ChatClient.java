@@ -3,6 +3,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.IOException;
+import java.net.Socket;
+import java.net.UnknownHostException;
 
 /**
  * @author : zhenweiLi
@@ -14,7 +17,7 @@ public class ChatClient extends Frame {
     /**
      * 聊天内容框
      */
-    private TextArea mTaContent  = new TextArea();
+    private TextArea mTaContent = new TextArea();
 
     /**
      * 输入文本框
@@ -48,6 +51,19 @@ public class ChatClient extends Frame {
         mTfInput.addActionListener(new OnInputViewEnter());
         //  显示窗口
         setVisible(true);
+        //  自动连接
+        connect();
+    }
+
+    private void connect() {
+        try {
+            Socket socket = new Socket("127.0.0.1", 8888);
+            System.out.println("connected");
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
