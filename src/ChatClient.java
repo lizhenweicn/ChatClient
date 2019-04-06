@@ -1,4 +1,6 @@
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
@@ -42,8 +44,22 @@ public class ChatClient extends Frame {
                 System.exit(0);
             }
         });
+        //  增加输入控件回车监听
+        mTfInput.addActionListener(new OnInputViewEnter());
         //  显示窗口
         setVisible(true);
+    }
+
+    /**
+     * 当输入框回车时触发该监听
+     */
+    private class OnInputViewEnter implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            String inputContent = mTfInput.getText().trim();
+            mTaContent.append(inputContent);
+            mTfInput.setText("");
+        }
     }
 
 }
